@@ -1,0 +1,144 @@
+using System;
+using System.Diagnostics;
+
+public class IntroSortProgram
+{
+    private const int InsertionThreshold = 16;
+
+    public static void Main(string[] args)
+    {
+        const int n = 10000000;
+        int[] array = new int[n];
+        Random rand = new Random();
+
+        for (int i = 0; i < n; i++)
+        {
+            array[i] = rand.Next(0, 100000000);
+        }
+
+        Console.WriteLine("Dataset generated. Starting sort...");
+
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        IntroSort(array);
+        stopwatch.Stop();
+
+        Console.WriteLine($"Sorting 10,000,000 items took {stopwatch.ElapsedMilliseconds} ms.");
+
+        bool isSorted = true;
+        for (int i = 0; i < n - 1; i++)
+        {
+            if (array[i] > array[i + 1])
+            {
+                isSorted = false;
+                break;
+            }
+        }
+        Console.WriteLine($"Is array sorted? {isSorted}");
+    }
+
+    public static void IntroSort(int[] array)
+    {
+        int maxDepth = (int)(2 * Math.Floor(Math.Log(array.Length, 2)));
+        IntroSortRecursive(array, 0, array.Length, maxDepth);
+    }
+
+    private static void IntroSortRecursive(int[] array, int start, int end, int maxDepth)
+    {
+        while (end - start > InsertionThreshold)
+        {
+            if (maxDepth == 0)
+            {
+                HeapSort(array, start, end);
+                return;
+            }
+            maxDepth--;
+
+            int pivot = GetMedianOfThree(array, start, start + ((end - start) / 2) + 1, end - 1);
+            int p = Partition(array, start, end, pivot);
+            IntroSortRecursive(array, p, end, maxDepth);
+
+            end = p;
+        }
+
+        InsertionSort(array, start, end);
+    }
+
+    private static int GetMedianOfThree(int[] array, int first, int middle, int last)
+    {
+        if ((array[first] > array[middle]) != (array[first] > array[last]))
+            return array[first];
+        else if ((array[middle] > array[first]) != (array[middle] > array[last]))
+            return array[middle];
+        else
+            return array[last];
+    }
+
+    private static int Partition(int[] array, int low, int high, int pivot)
+    {
+        int i = low;
+        int j = high;
+        while (true)
+        {
+            while (array[i] < pivot) i++;
+            j--;
+            while (pivot < array[j]) j--;
+            if (i >= j) return i;
+            Swap(array, i, j);
+            i++;
+        }
+    }
+
+    private static void InsertionSort(int[] array, int start, int end)
+    {
+        for (int i = start + 1; i < end; i++)
+        {
+            int key = array[i];
+            int j = i - 1;
+            while (j >= start && array[j] > key)
+            {
+                array[j + 1] = array[j];
+                j--;
+            }
+            array[j + 1] = key;
+        }
+    }
+
+    private static void HeapSort(int[] array, int start, int end)
+    {
+        int n = end - start;
+        for (int i = n / 2 - 1; i >= 0; i--)
+            Heapify(array, start + i, start, end);
+
+        for (int i = end - 1; i > start; i--)
+        {
+            Swap(array, i, start);
+            Heapify(array, start, start, i);
+        }
+    }
+
+    private static void Heapify(int[] array, int index, int start, int end)
+    {
+        int largest = index;
+        int left = 2 * (index - start) + 1 + start;
+        int right = 2 * (index - start) + 2 + start;
+
+        if (left < end && array[largest] < array[left])
+            largest = left;
+
+        if (right < end && array[largest] < array[right])
+            largest = right;
+
+        if (largest != index)
+        {
+            Swap(array, index, largest);
+            Heapify(array, largest, start, end);
+        }
+    }
+
+    private static void Swap(int[] array, int i, int j)
+    {
+        int temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+}
